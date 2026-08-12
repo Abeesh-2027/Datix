@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datix — Data Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<script>
+  // Backend API base URL (Render). Set this to your deployed Render URL,
+  // e.g. "https://datix-backend.onrender.com" (no trailing slash, no /api).
+  window.API_BASE_URL = "https://YOUR-RENDER-BACKEND.onrender.com";
+</script>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation">☰</button>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">🚀 <span>Datix</span></div>
+
+    <div class="sidebar-section-header">Navigation</div>
+    <nav class="nav" id="nav">
+      <button class="nav-btn active" data-page="clean" data-requires-data="false">🧹 Clean</button>
+      <button class="nav-btn" data-page="visualize" data-requires-data="true">📈 Visualize</button>
+      <button class="nav-btn" data-page="analyze" data-requires-data="true">🔬 Analyze</button>
+      <button class="nav-btn" data-page="chat" data-requires-data="true">💬 AI Chat</button>
+    </nav>
+    <p class="hint" id="unlockHint">Upload a dataset to unlock all pages</p>
+
+    <hr>
+
+    <div id="sidebarCleanOptions" class="sidebar-options"></div>
+    <div id="sidebarDatasetInfo" class="sidebar-options" style="display:none"></div>
+  </aside>
+
+  <main class="main">
+    <div class="hero">
+      <h1 id="heroTitle">🧹 Data Cleaning Studio</h1>
+      <p id="heroSub">Upload, inspect, configure and clean your dataset.</p>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- ===================== CLEAN PAGE ===================== -->
+    <section class="page active" id="page-clean">
+      <div class="upload-zone" id="dropZone">
+        <div style="font-size:3rem;margin-bottom:12px;">📂</div>
+        <div class="upload-title">Upload a dataset to get started</div>
+        <div class="upload-sub">Supports CSV · Excel · JSON · Parquet · TSV</div>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.json,.parquet,.tsv" hidden>
+        <button class="btn btn-primary" id="chooseFileBtn" style="margin-top:16px;">Choose File</button>
+      </div>
+
+      <div id="cleanContent" style="display:none;">
+        <div id="rawReviewSection">
+          <div class="fancy-divider"></div>
+          <h2>🔍 Dataset Review</h2>
+          <div class="metric-grid" id="rawMetrics"></div>
+
+          <div class="fancy-divider"></div>
+          <div class="two-col">
+            <div>
+              <h4>Missing Value Map</h4>
+              <div id="missingHeatmap" class="chart-box"></div>
+            </div>
+            <div>
+              <h4>Data Types</h4>
+              <div id="dtypePie" class="chart-box"></div>
+            </div>
+          </div>
+
+          <div class="fancy-divider"></div>
+          <h4>📊 Column Diagnostics</h4>
+          <div id="columnReport" class="table-wrap"></div>
+
+          <details class="expander">
+            <summary>📋 Raw Data Preview (first 100 rows)</summary>
+            <div id="rawPreview" class="table-wrap"></div>
+          </details>
+
+          <div class="fancy-divider"></div>
+          <button class="btn btn-primary" id="cleanBtn">🚿 Clean Dataset</button>
+        </div>
+
+        <button class="btn btn-secondary" id="showRawReviewBtn" style="display:none;margin-bottom:16px;">⬅ Back to Raw Dataset Review</button>
+
+        <div id="cleanResults" style="display:none;">
+          <h2>✅ Cleaning Results</h2>
+          <div class="metric-grid" id="cleanMetrics"></div>
+
+          <div class="fancy-divider"></div>
+          <h4>📝 Cleaning Log</h4>
+          <div id="cleanLog"></div>
+
+          <div class="fancy-divider"></div>
+          <h4>🗂 Cleaned Data Preview</h4>
+          <div class="tabs" id="cleanPreviewTabs">
+            <button class="tab-btn active" data-tab="preview100">Preview (100 rows)</button>
+          </div>
+          <div id="cleanPreview100" class="table-wrap tab-panel active"></div>
+          <div id="cleanFullData" class="table-wrap tab-panel"></div>
+
+          <details class="expander">
+            <summary>📊 Post-Cleaning Column Diagnostics</summary>
+            <div id="cleanColumnReport" class="table-wrap"></div>
+          </details>
+
+          <h4>📉 Missing Values: Before vs After</h4>
+          <div id="missingComparison" class="chart-box"></div>
+
+          <div class="fancy-divider"></div>
+          <h2>🔍 Advanced Filter</h2>
+          <div class="form-row" id="filterForm">
+            <select id="filterCol"></select>
+            <select id="filterCondition"></select>
+            <input type="text" id="filterValue" placeholder="Value">
+            <button class="btn btn-primary" id="applyFilterBtn">Apply Filter</button>
+            <button class="btn btn-secondary" id="clearFilterBtn" style="display:none;">✖ Clear Filter</button>
+          </div>
+
+          <div class="fancy-divider"></div>
+          <h2>🎯 Active Dataset</h2>
+          <div id="activeDatasetLabel" class="info-banner"></div>
+          <div class="tabs" id="activePreviewTabs">
+            <button class="tab-btn active" data-tab="activePreview20">Preview (20 rows)</button>
+          </div>
+          <div id="activePreview20" class="table-wrap tab-panel active"></div>
+          <div id="activeFullData" class="table-wrap tab-panel"></div>
+
+          <div class="fancy-divider"></div>
+          <h4>📥 Export Cleaned Data</h4>
+          <div id="exportLabel" class="info-banner" style="margin-bottom:8px;"></div>
+          <div class="form-row">
+            <a class="btn btn-outline" id="dlCsv" data-format="csv" href="#">⬇ CSV</a>
+            <a class="btn btn-outline" id="dlExcel" data-format="excel" href="#">⬇ Excel</a>
+            <a class="btn btn-outline" id="dlJson" data-format="json" href="#">⬇ JSON</a>
+            <a class="btn btn-outline" id="dlParquet" data-format="parquet" href="#">⬇ Parquet</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VISUALIZE PAGE ===================== -->
+    <section class="page" id="page-visualize">
+      <p class="page-desc">Explore your dataset visually with multiple chart types and configuration options.</p>
+      <div class="tabs" id="vizTabs">
+        <button class="tab-btn active" data-tab="vizBasic">📊 Basic Charts</button>
+        <button class="tab-btn" data-tab="vizDist">📉 Distribution</button>
+        <button class="tab-btn" data-tab="vizCorr">🔗 Correlation</button>
+        <button class="tab-btn" data-tab="vizMulti">🧩 Multi-Variable</button>
+        <button class="tab-btn" data-tab="vizTime">⏱ Time Series</button>
+      </div>
+
+      <div class="tab-panel active" id="vizBasic">
+        <div class="viz-basic-layout">
+          <div class="viz-basic-main">
+            <div class="form-row">
+              <select id="basicType">
+                <option>Bar</option><option>Horizontal Bar</option>
+                <option>Grouped Bar</option><option>Stacked Bar</option><option>100% Stacked Bar</option>
+                <option>Line</option>
+                <option>Area</option><option>Scatter</option><option>Pie</option>
+                <option>Donut</option><option>Box</option>
+              </select>
+              <select id="basicX"></select>
+              <select id="basicY"></select>
+              <select id="basicGroup" style="display:none;"></select>
+              <select id="basicColor"></select>
+            </div>
+            <div class="form-row">
+              <label>Limit rows: <input type="range" id="basicTopN" min="10" max="200" value="50"><span id="basicTopNVal">50</span></label>
+              <label><input type="checkbox" id="basicGrid" checked> Show grid</label>
+              <button class="btn btn-primary" id="basicRenderBtn">Render Chart</button>
+            </div>
+            <div class="chart-box" id="basicChartOut"></div>
+          </div>
+          <aside class="viz-guide">
+            <h4>📖 Chart Guide</h4>
+            <p class="page-desc" style="margin-top:0;">What each chart type is best used for.</p>
+            <div id="chartGuideTable"></div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="vizDist">
+        <div class="form-row">
+          <select id="distCol"></select>
+          <label>Bins: <input type="range" id="distBins" min="5" max="100" value="25"><span id="distBinsVal">25</span></label>
+          <button class="btn btn-primary" id="distRenderBtn">Render Chart</button>
+        </div>
+        <div class="chart-box" id="distChartOut"></div>
+        <div id="distStatsTable" class="table-wrap"></div>
+      </div>
+
+      <div class="tab-panel" id="vizCorr">
+        <div id="corrColsWrap" class="multiselect"></div>
+        <div class="form-row">
+          <label><input type="radio" name="corrMethod" value="pearson" checked> pearson</label>
+          <label><input type="radio" name="corrMethod" value="spearman"> spearman</label>
+          <label><input type="radio" name="corrMethod" value="kendall"> kendall</label>
+          <button class="btn btn-primary" id="corrRenderBtn">Render Chart</button>
+        </div>
+        <div class="chart-box" id="corrChartOut"></div>
+        <h4>🔝 Strongest Correlations</h4>
+        <div id="corrPairsTable" class="table-wrap"></div>
+      </div>
+
+      <div class="tab-panel" id="vizMulti">
+        <div class="form-row">
+          <select id="mvX"></select>
+          <select id="mvY"></select>
+          <select id="mvHue"></select>
+          <select id="mvSize"></select>
+          <button class="btn btn-primary" id="mvRenderBtn">Render Chart</button>
+        </div>
+        <div class="chart-box" id="mvChartOut"></div>
+      </div>
+
+      <div class="tab-panel" id="vizTime">
+        <div id="tsNoDate" class="info-banner" style="display:none;">No date/datetime columns detected. Parse dates in the cleaning step first.</div>
+        <div class="form-row" id="tsControls">
+          <select id="tsDate"></select>
+          <select id="tsVal"></select>
+          <select id="tsAgg">
+            <option>sum</option><option>mean</option><option>count</option><option>max</option><option>min</option>
+          </select>
+          <button class="btn btn-primary" id="tsRenderBtn">Render Chart</button>
+        </div>
+        <div class="chart-box" id="tsChartOut"></div>
+      </div>
+    </section>
+
+    <!-- ===================== ANALYZE PAGE ===================== -->
+    <section class="page" id="page-analyze">
+      <p class="page-desc">Deep statistical analysis, group comparisons, outlier detection, and data profiling.</p>
+      <div class="tabs" id="anTabs">
+        <button class="tab-btn active" data-tab="anOverview">📋 Full Overview</button>
+        <button class="tab-btn" data-tab="anGroup">👥 Group Analysis</button>
+        <button class="tab-btn" data-tab="anOutlier">🎯 Outlier Detection</button>
+        <button class="tab-btn" data-tab="anProfile">🗂 Data Profile</button>
+        <button class="tab-btn" data-tab="anKpi">📊 KPI Dashboard</button>
+      </div>
+
+      <div class="tab-panel active" id="anOverview">
+        <div class="metric-grid" id="anOverviewMetrics"></div>
+        <h4>📐 Numeric Statistics</h4>
+        <div id="anNumericStats" class="table-wrap"></div>
+        <h4>🔤 Categorical Statistics</h4>
+        <div id="anCategoricalStats" class="table-wrap"></div>
+      </div>
+
+      <div class="tab-panel" id="anGroup">
+        <div class="form-row">
+          <select id="grpBy"></select>
+          <select id="grpVal"></select>
+          <select id="grpAgg">
+            <option>mean</option><option>sum</option><option>count</option><option>median</option><option>std</option><option>min</option><option>max</option>
+          </select>
+          <label>Top N: <input type="range" id="grpTopN" min="5" max="30" value="10"><span id="grpTopNVal">10</span></label>
+          <button class="btn btn-primary" id="grpRenderBtn">Render</button>
+        </div>
+        <div class="chart-box" id="grpChartOut"></div>
+        <div id="grpTable" class="table-wrap"></div>
+        <h4>🌡 Group Heatmap (mean values)</h4>
+        <div id="grpHeatColsWrap" class="multiselect"></div>
+        <button class="btn btn-secondary" id="grpHeatBtn">Render Heatmap</button>
+        <div class="chart-box" id="grpHeatOut"></div>
+      </div>
+
+      <div class="tab-panel" id="anOutlier">
+        <div class="form-row">
+          <select id="outCol"></select>
+          <select id="outMethod">
+            <option>IQR</option><option>Z-Score</option><option>Modified Z-Score</option>
+          </select>
+          <label>Threshold: <input type="range" id="outThresh" min="1" max="5" step="0.1" value="1.5"><span id="outThreshVal">1.5</span></label>
+          <button class="btn btn-primary" id="outRenderBtn">Detect</button>
+        </div>
+        <div class="metric-grid" id="outMetrics"></div>
+        <div class="chart-box" id="outChartOut"></div>
+        <h4>📋 Outlier Rows</h4>
+        <div id="outRowsTable" class="table-wrap"></div>
+      </div>
+
+      <div class="tab-panel" id="anProfile">
+        <div id="profileTable" class="table-wrap"></div>
+        <h4>🔢 Value Count Explorer</h4>
+        <div class="form-row">
+          <select id="vcCol"></select>
+          <label>Top N: <input type="range" id="vcTopN" min="5" max="50" value="15"><span id="vcTopNVal">15</span></label>
+          <button class="btn btn-primary" id="vcRenderBtn">Render</button>
+        </div>
+        <div class="chart-box" id="vcChartOut"></div>
+      </div>
+
+      <div class="tab-panel" id="anKpi">
+        <div class="form-row">
+          <div id="kpiColsWrap" class="multiselect"></div>
+          <select id="kpiFilterCol"><option value="None">Filter By (optional)</option></select>
+          <select id="kpiFilterVal" style="display:none;"></select>
+          <button class="btn btn-primary" id="kpiRenderBtn">Render</button>
+        </div>
+        <div class="metric-grid" id="kpiCards"></div>
+        <div class="chart-box" id="kpiChartOut"></div>
+      </div>
+    </section>
+
+    <!-- ===================== CHAT PAGE ===================== -->
+    <section class="page" id="page-chat">
+      <p class="page-desc">Ask Llama 3 (via Groq Cloud) anything about the dataset.</p>
+      <div id="chatStatus" class="info-banner"></div>
+      <div class="chat-layout">
+        <div class="chat-main">
+          <div id="chatMessages" class="chat-messages">
+            <div class="chat-empty">
+              <div style="font-size:2.5rem;margin-bottom:8px;">🤖</div>
+              Ask me anything about your dataset!<br>
+              <span class="muted">Or use the Quick Actions on the right →</span>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Ask about your dataset…">
+            <button class="btn btn-primary" id="chatSendBtn">Send</button>
+          </div>
+          <button class="btn btn-outline" id="exportChatBtn" style="margin-top:10px;">⬇ Export Chat</button>
+        </div>
+        <div class="chat-side">
+          <h4>⚡ Quick Actions</h4>
+          <button class="btn btn-block" data-action="auto_insights">🔍 Auto Insights</button>
+          <button class="btn btn-block" data-action="stats_summary">📊 Statistical Summary</button>
+          <button class="btn btn-block" data-action="quality_report">🎯 Data Quality Report</button>
+          <button class="btn btn-block" data-action="suggestions">💡 Analysis Suggestions</button>
+          <button class="btn btn-block" data-action="generate_code">🐍 Generate Pandas Code</button>
+          <hr>
+          <h4>🔢 Static Insights</h4>
+          <button class="btn btn-block" id="staticInsightsBtn">📋 Show Rule-Based Insights</button>
+          <div id="staticInsightsBox" style="display:none;"></div>
+          <hr>
+          <button class="btn btn-block btn-secondary" id="clearChatBtn">🗑 Clear Chat</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
