@@ -870,3 +870,13 @@ Datix is built using:
 * [Seaborn](https://seaborn.pydata.org/)
 * [Groq Cloud](https://console.groq.com/)
 * Llama 3
+  
+---
+
+# 👨‍💻 Author
+
+Abeesh
+
+---
+
+⭐ If you find this project useful, consider giving the repository a star!
