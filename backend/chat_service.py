@@ -9,8 +9,8 @@ try:
 except ImportError:
     GROQ_SDK_AVAILABLE = False
 
-MODEL_NAME = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
-FALLBACK_MODEL = "llama3-8b-8192"
+MODEL_NAME = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+FALLBACK_MODEL = "openai/gpt-oss-20b"
 
 SUGGESTED_QUESTIONS = [
     "What are the main trends in this dataset?",
