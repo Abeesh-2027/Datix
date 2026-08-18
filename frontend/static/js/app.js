@@ -1,6 +1,5 @@
 const state = { hasData: false, cleaned: false, columns: null, columnTypes: null };
 const API_BASE = (window.API_BASE_URL || '').replace(/\/$/, '');
-
 function getClientSid() {
   let sid = localStorage.getItem('datix_sid');
   if (!sid) {
@@ -56,7 +55,6 @@ async function checkBackendConnection() {
   try {
     await api('/api/health');
   } catch (e) {
-    // showBackendStatus() already called inside api() on network failure.
   }
 }
 document.addEventListener('DOMContentLoaded', checkBackendConnection);
@@ -66,10 +64,6 @@ function wireDownloadLinks() {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       const fmt = a.getAttribute('data-format');
-      // Downloads happen via full page navigation, so we can't attach a
-      // custom header here. Pass the session id as a query param instead so
-      // the backend can still resolve the right session (add support for
-      // this on the Flask side if you rely on it — see note below).
       const sid = getClientSid();
       window.location.href = `${API_BASE}/api/download?format=${fmt}&dataset=active&sid=${encodeURIComponent(sid)}`;
     });
@@ -844,10 +838,17 @@ function renderChatMessages(messages, isTyping = false) {
     return;
   }
   messages.forEach(m => {
-    box.appendChild(el('div', { class: `chat-msg ${m.role}` }, [
+    const msgDiv = el('div', { class: `chat-msg ${m.role}` }, [
       el('div', { class: 'role' }, m.role === 'user' ? 'You' : 'AI'),
-      m.content,
-    ]));
+    ]);
+    if (m.role === 'assistant' && window.marked && window.DOMPurify) {
+      const contentDiv = el('div', { class: 'md-content' });
+      contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(m.content));
+      msgDiv.appendChild(contentDiv);
+    } else {
+      msgDiv.appendChild(document.createTextNode(m.content));
+    }
+    box.appendChild(msgDiv);
   });
   if (isTyping) {
     box.appendChild(el('div', { class: 'chat-msg assistant chat-typing' }, [
