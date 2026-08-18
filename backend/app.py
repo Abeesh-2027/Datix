@@ -29,7 +29,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "datix-dev-secret-change-me")
 
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", 50)) * 1024 * 1024
 
-# --- CORS configuration ---
 _allowed_origins = [
     "https://datix-five.vercel.app",
     "http://localhost:3000",
@@ -42,6 +41,7 @@ CORS(
     app,
     resources={r"/api/*": {"origins": _allowed_origins}},
     supports_credentials=True,
+    allow_headers=["Content-Type", "X-Session-Id"],
 )
 
 
@@ -56,11 +56,34 @@ if _is_production:
 STORE = {}
 
 
+def _new_bucket():
+    return {"raw": None, "clean": None, "filtered": None, "log": None, "chat": []}
+
+
 def _sid() -> str:
+    """
+    Resolve a stable session id for this client.
+
+    Cross-site cookies (frontend on Vercel, backend on Render) get blocked by
+    default in Safari, Firefox, and Brave, and are being phased out in Chrome.
+    When that happens Flask's cookie-based `session` silently resets on every
+    request, so we'd never find the client's uploaded data again.
+
+    To work around this, the frontend generates its own id (stored in
+    localStorage, which is first-party and always available) and sends it via
+    the `X-Session-Id` header. We prefer that header when present. If it's
+    missing (e.g. a raw curl request, or same-origin local dev), we fall back
+    to the normal cookie-based Flask session.
+    """
+    header_sid = request.headers.get("X-Session-Id") or request.args.get("sid")
+    if header_sid:
+        STORE.setdefault(header_sid, _new_bucket())
+        return header_sid
+
     if "sid" not in session:
         session["sid"] = str(uuid.uuid4())
     sid = session["sid"]
-    STORE.setdefault(sid, {"raw": None, "clean": None, "filtered": None, "log": None, "chat": []})
+    STORE.setdefault(sid, _new_bucket())
     return sid
 
 
@@ -180,8 +203,6 @@ def err(message, code=400):
 
 @app.route("/")
 def index():
-    # Kept for local development / fallback only. In the split deployment,
-    # the actual UI is served separately by Vercel from the /frontend folder.
     try:
         return render_template("index.html")
     except Exception:

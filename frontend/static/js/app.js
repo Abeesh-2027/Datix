@@ -1,12 +1,25 @@
 const state = { hasData: false, cleaned: false, columns: null, columnTypes: null };
 const API_BASE = (window.API_BASE_URL || '').replace(/\/$/, '');
 
+function getClientSid() {
+  let sid = localStorage.getItem('datix_sid');
+  if (!sid) {
+    sid = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    localStorage.setItem('datix_sid', sid);
+  }
+  return sid;
+}
+
 async function api(url, opts = {}) {
   let res;
   try {
     res = await fetch(API_BASE + url, {
       credentials: 'include',
       ...opts,
+      headers: {
+        ...(opts.headers || {}),
+        'X-Session-Id': getClientSid(),
+      },
     });
   } catch (networkErr) {
     showBackendStatus(
@@ -53,7 +66,12 @@ function wireDownloadLinks() {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       const fmt = a.getAttribute('data-format');
-      window.location.href = `${API_BASE}/api/download?format=${fmt}&dataset=active`;
+      // Downloads happen via full page navigation, so we can't attach a
+      // custom header here. Pass the session id as a query param instead so
+      // the backend can still resolve the right session (add support for
+      // this on the Flask side if you rely on it — see note below).
+      const sid = getClientSid();
+      window.location.href = `${API_BASE}/api/download?format=${fmt}&dataset=active&sid=${encodeURIComponent(sid)}`;
     });
   });
 }
