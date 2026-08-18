@@ -11,32 +11,32 @@ The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there 
 
 ## Interface
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/a3e7157af4e78efd90fad10d46fea8fba32eaee5/Interface.png)
+![image alt]()
 
 ## Review a Data Type of data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7e10b2137dffb2bd0578701c887aa12d4aa198e9/Data%20Review.png)
-![image alt](https://github.com/Abeesh-2027/Datix/blob/bb22716787a8acb5451c13932b7b930712ed091d/Data%20Types.png)
+![image alt]()
+![image alt]()
 
 ## Clean Data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7229567f48ec99effddf89dee624ed46cb7ebf2b/Clean.png)
+![image alt]()
 
 ## Filter Data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7229567f48ec99effddf89dee624ed46cb7ebf2b/Filter.png)
+![image alt]()
 
 ## Visualization Data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/cba56f758fa46794528634efe2f1918da43835ba/Visualisation.png)
+![image alt]()
 
 ## Analysis Data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7229567f48ec99effddf89dee624ed46cb7ebf2b/Analysis.png)
+![image alt]()
 
 ## Chat on Data
 
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7229567f48ec99effddf89dee624ed46cb7ebf2b/Chat.png)
+![image alt]()
 
 ---
 ## ✨ Features

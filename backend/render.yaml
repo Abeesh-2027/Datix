@@ -16,6 +16,11 @@ services:
         value: 3.12.3
       - key: ALLOWED_ORIGINS
         sync: false
+        # REQUIRED MANUAL STEP: in the Render dashboard, set this to your
+        # exact Vercel frontend URL, e.g. https://your-app.vercel.app
+        # (no trailing slash, comma-separate multiple origins). If this is
+        # left blank, the browser will block every request from your
+        # deployed frontend (uploads, chat, everything) with a CORS error.
       # NOTE: Render automatically sets RENDER=true on its platform, which
       # app.py uses to enable secure cross-site session cookies. No action
       # needed here.

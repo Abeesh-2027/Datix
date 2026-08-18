@@ -1,24 +1,52 @@
 const state = { hasData: false, cleaned: false, columns: null, columnTypes: null };
-
-// Base URL of the Flask backend (set in index.html, e.g. via window.API_BASE_URL).
-// Falls back to same-origin ("") for local dev where Flask serves both.
 const API_BASE = (window.API_BASE_URL || '').replace(/\/$/, '');
 
 async function api(url, opts = {}) {
-  const res = await fetch(API_BASE + url, {
-    // Needed so the Flask session cookie is sent/stored across the
-    // Vercel <-> Render origins.
-    credentials: 'include',
-    ...opts,
-  });
+  let res;
+  try {
+    res = await fetch(API_BASE + url, {
+      credentials: 'include',
+      ...opts,
+    });
+  } catch (networkErr) {
+    showBackendStatus(
+      `Can't reach the backend at ${API_BASE || '(same origin)'}. ` +
+      `Check that window.API_BASE_URL in index.html is correct and the ` +
+      `Render service is deployed, and that ALLOWED_ORIGINS on Render ` +
+      `includes this site's URL.`
+    );
+    throw new Error('Cannot reach the server. Check your connection or try again shortly.');
+  }
   let data;
   try { data = await res.json(); } catch (e) { data = null; }
   if (!res.ok) {
     const msg = (data && data.error) || `Request failed (${res.status})`;
     throw new Error(msg);
   }
+  hideBackendStatus();
   return data;
 }
+
+function showBackendStatus(message) {
+  const el = document.getElementById('backendStatus');
+  if (!el) return;
+  el.textContent = `⚠️ ${message}`;
+  el.style.display = 'block';
+}
+
+function hideBackendStatus() {
+  const el = document.getElementById('backendStatus');
+  if (el) el.style.display = 'none';
+}
+
+async function checkBackendConnection() {
+  try {
+    await api('/api/health');
+  } catch (e) {
+    // showBackendStatus() already called inside api() on network failure.
+  }
+}
+document.addEventListener('DOMContentLoaded', checkBackendConnection);
 
 function wireDownloadLinks() {
   document.querySelectorAll('a[data-format]').forEach((a) => {
