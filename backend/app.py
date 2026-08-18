@@ -29,16 +29,14 @@ app.secret_key = os.environ.get("SECRET_KEY", "datix-dev-secret-change-me")
 
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", 50)) * 1024 * 1024
 
-# --- Cross-origin setup (frontend on Vercel, backend on Render) -----------
-# ALLOWED_ORIGINS is a comma-separated list of frontend URLs allowed to call
-# this API with credentials (cookies), e.g.:
-#   https://your-app.vercel.app,http://localhost:3000
+# --- CORS configuration ---
 _allowed_origins = [
-    o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()
+    "https://datix-five.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
 ]
-if not _allowed_origins:
-    # Sensible local-dev defaults so `python app.py` still works out of the box.
-    _allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5500"]
 
 CORS(
     app,
@@ -46,10 +44,7 @@ CORS(
     supports_credentials=True,
 )
 
-# The session cookie must be sent cross-site (frontend domain != backend
-# domain), which requires SameSite=None and Secure=True. Secure cookies are
-# only sent over HTTPS, which is what Render provides in production; for
-# local HTTP development we fall back to the normal Lax/insecure cookie.
+
 _is_production = os.environ.get("RENDER", "") != "" or os.environ.get("FLASK_ENV") == "production"
 if _is_production:
     app.config.update(
