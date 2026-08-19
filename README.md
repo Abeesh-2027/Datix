@@ -24,7 +24,7 @@ The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there 
 
 ## Filter Data
 
-![image alt]()
+![image alt](https://github.com/Abeesh-2027/Datix/blob/e4645d2a14c6c3da0154e816109709916765985d/Advanced%20filter.png)
 
 ## Visualization Data
 
