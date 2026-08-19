@@ -28,7 +28,7 @@ The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there 
 
 ## Visualization Data
 
-![image alt]()
+![image alt](https://github.com/Abeesh-2027/Datix/blob/8edb0f6513258496c8f2b2a847388dfbb1c805f7/Visualisation.png)
 
 ## Analysis Data
 
