@@ -36,7 +36,7 @@ The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there 
 
 ## Chat on Data
 
-![image alt]()
+![image alt](https://github.com/Abeesh-2027/Datix/blob/39299fa4cf4faf6ae6ce0f7cf7892a271704cb99/chat.png)
 
 ---
 ## ✨ Features
