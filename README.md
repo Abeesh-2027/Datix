@@ -16,7 +16,7 @@ The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there 
 ## Review a Data Type of data
 
 ![image alt](https://github.com/Abeesh-2027/Datix/blob/ca31b4ebd194365d19e6f4ef0a4223af64c68b2c/data%20type.png)
-![image alt]()
+![image alt](https://github.com/Abeesh-2027/Datix/blob/9513b8bef72b97e10f4962cf010555a18eefd2ec/data%20type%20preview.png)
 
 ## Clean Data
 
