@@ -30,13 +30,19 @@ app.secret_key = os.environ.get("SECRET_KEY", "datix-dev-secret-change-me")
 
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", 50)) * 1024 * 1024
 
-_allowed_origins = [
+_default_origins = [
     "https://datix-five.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5500",
     "http://127.0.0.1:5500",
 ]
+# ALLOWED_ORIGINS was documented in render.yaml but never actually read here -
+# meaning any Vercel URL other than the one hardcoded above was silently
+# blocked by CORS, which breaks *every* API call (upload, clean, chat,
+# charts - everything at once, since they all go through this same check).
+_env_origins = [o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+_allowed_origins = list(dict.fromkeys(_default_origins + _env_origins))
 
 CORS(
     app,
@@ -233,6 +239,17 @@ def index():
 @app.route("/api/health")
 def api_health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/debug/cors")
+def api_debug_cors():
+    """Lets you check from a browser or curl exactly which origins this
+    deployment currently trusts, without digging through Render's dashboard."""
+    return jsonify({
+        "allowed_origins": _allowed_origins,
+        "request_origin_header": request.headers.get("Origin"),
+        "allowed_origins_env_var_set": bool(os.environ.get("ALLOWED_ORIGINS")),
+    })
 
 
 
