@@ -23,6 +23,7 @@ from cleaning import (
 import chart_utils
 import analysis_utils
 import chat_service
+import db
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "datix-dev-secret-change-me")
@@ -53,11 +54,13 @@ if _is_production:
     )
 
 
+db.init_db()
+
 STORE = {}
 
 
 def _new_bucket():
-    return {"raw": None, "clean": None, "filtered": None, "log": None, "chat": []}
+    return {"raw": None, "clean": None, "filtered": None, "log": None, "chat": [], "_hydrated": False}
 
 
 def _sid() -> str:
@@ -88,7 +91,25 @@ def _sid() -> str:
 
 
 def _state():
-    return STORE[_sid()]
+    sid = _sid()
+    st = STORE[sid]
+    # The in-memory dict is just a per-worker cache. The first time this
+    # worker sees this session id, pull the real state from the database
+    # (in case another worker, or a previous restart, has it).
+    if not st.get("_hydrated"):
+        persisted = db.load_session(sid)
+        if persisted:
+            st.update(persisted)
+        st["_hydrated"] = True
+    return st
+
+
+def _persist():
+    """Write the current session's state to the database so every worker
+    (and future restarts) can see it. Call this after any route mutates
+    raw/clean/filtered/log/chat."""
+    sid = _sid()
+    db.save_session(sid, STORE[sid])
 
 
 def _active_df():
@@ -235,6 +256,7 @@ def upload():
     st["filtered"] = None
     st["log"] = None
     st["chat"] = []
+    _persist()
 
     return jsonify({
         "filename": f.filename,
@@ -276,6 +298,7 @@ def api_clean():
     st["log"] = log
     st["filtered"] = None
     st["chat"] = []
+    _persist()
 
     raw = st["raw"]
     over_raw = get_dataset_overview(raw)
@@ -358,6 +381,7 @@ def api_filter():
             else:
                 filtered = df[col_series.str.lower() == str(value).lower()]
         st["filtered"] = filtered
+        _persist()
         return jsonify({"rows": _json_records(filtered.head(200)), "total": len(filtered)})
     except Exception as e:
         return err(f"Filter error: {e}")
@@ -367,6 +391,7 @@ def api_filter():
 def api_clear_filter():
     st = _state()
     st["filtered"] = None
+    _persist()
     return jsonify({"ok": True})
 
 
@@ -649,6 +674,7 @@ def api_chat_quick_action():
     result = chat_service.ask_groq([{"role": "user", "content": prompt}], df)
     st["chat"].append({"role": "user", "content": prompt})
     st["chat"].append({"role": "assistant", "content": result})
+    _persist()
     return jsonify({"response": result, "history": st["chat"]})
 
 
@@ -669,12 +695,14 @@ def api_chat_send():
     st["chat"].append({"role": "user", "content": message})
     result = chat_service.ask_groq(st["chat"], df)
     st["chat"].append({"role": "assistant", "content": result})
+    _persist()
     return jsonify({"response": result, "history": st["chat"]})
 
 
 @app.route("/api/chat", methods=["DELETE"])
 def api_chat_clear():
     _state()["chat"] = []
+    _persist()
     return jsonify({"ok": True})
 
 
