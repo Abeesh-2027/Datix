@@ -7,38 +7,7 @@ Upload a CSV, Excel, JSON, Parquet, or TSV file and use Datix to clean your data
 The AI assistant is powered by **Llama 3 through the Groq Cloud API**, so there is no need to install an AI model or use a local GPU.
 
 ---
-## Screenshot
 
-## Interface
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/9b23597e05ea26bd022a02fe58030291088882f3/interface.png)
-
-## Review a Data Type of data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/ca31b4ebd194365d19e6f4ef0a4223af64c68b2c/data%20type.png)
-![image alt](https://github.com/Abeesh-2027/Datix/blob/9513b8bef72b97e10f4962cf010555a18eefd2ec/data%20type%20preview.png)
-
-## Clean Data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/f44a5717b06e2319590a193521266d5dfe44e50a/Cleaned%20data%20preview.png)
-
-## Filter Data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/e4645d2a14c6c3da0154e816109709916765985d/Advanced%20filter.png)
-
-## Visualization Data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/8edb0f6513258496c8f2b2a847388dfbb1c805f7/Visualisation.png)
-
-## Analysis Data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/7e62130a5033b38b72983bf3652b598e0c4a603d/Analysis.png)
-
-## Chat on Data
-
-![image alt](https://github.com/Abeesh-2027/Datix/blob/39299fa4cf4faf6ae6ce0f7cf7892a271704cb99/chat.png)
-
----
 ## ✨ Features
 
 ### 🧹 Data Cleaning
